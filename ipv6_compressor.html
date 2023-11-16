@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IPv6 Address Compresor</title>
+
+    <style>
+        body {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh; /* Ensure the body takes up the full height of the viewport */
+            margin: 0;
+        }
+        div label {
+            font-weight: bolder;
+        }
+        /* Apply styles to input fields */
+        div input[type="text"] {
+            width: 3em; /* Fixed width for 4 characters */
+            font-family: 'Courier New', monospace; /* Use a monospaced font */
+            font-size: large;
+            text-align: center;
+        }
+        div {
+            /* font-size: large; */
+            display: flex;
+            font-size: large;
+            gap: 5px; /* Add some spacing between elements */
+        }
+
+    </style>
+
+</head>
+<body>
+    <div id="divInput"></div>
+    <div id="divZeros"></div>
+    <div id="div2colon"></div>
+
+    <script>
+        const divInput = document.getElementById("divInput");
+        let divZeros_created = false;
+        let div2colon_created = false;
+
+        const longIp = document.createElement("input");
+        longIp.setAttribute("id", "longIp");
+        divInput.appendChild(longIp);
+        const br = document.createElement("br");
+        divInput.appendChild(br);
+
+        let inputHextet_id, divInput_id = divInput.getAttribute("id");
+
+        for (let i = 1; i <= 8; i++) {
+            inputHextet_id = `${divInput_id}-hextet${i}`;
+            const label = document.createElement("label");
+            const input = document.createElement("input");
+            label.setAttribute("for", inputHextet_id);
+            label.textContent = i > 1 ? ":" : "";
+            input.setAttribute("type", "text");
+            input.setAttribute("id", inputHextet_id);
+            input.setAttribute("maxlength", "4");
+            divInput.appendChild(label);
+            divInput.appendChild(input);
+        }
+        
+        let hextets = new Array(8);
+
+        const button = document.createElement("button");
+        button.textContent = "Compress";
+        button.addEventListener("click", function() {
+            compress();
+        });
+        divInput.appendChild(button);
+
+        function compress(){
+            const divZeros = document.getElementById("divZeros");
+            let zerosHextet_id, divZeros_id = divZeros.getAttribute("id");
+
+            hextets0 = withoutLeadingZeros(hextets);
+            divZeros.innerHTML = "";
+            console.log(hextets0);
+
+            for (let i = 0; i < hextets0.length; i++) {
+                zerosHextet_id = `${divZeros_id}-hextet${i + 1}`;
+
+                // if (divZeros_created){
+                //     const input = document.getElementById(zerosHextet_id);
+                //     input.value = hextets0[i];
+                // } else {
+                    const label = document.createElement("label");
+                    const input = document.createElement("input");
+
+                    label.setAttribute("for", zerosHextet_id);
+                    label.textContent = i > 0 ? ":" : "";
+
+                    input.setAttribute("type", "text");
+                    input.setAttribute("id", zerosHextet_id);
+                    input.setAttribute("maxlength", "4");
+                    input.setAttribute("readonly", true);
+                    input.value = hextets0[i];
+
+                    divZeros.appendChild(label);
+                    divZeros.appendChild(input);
+                    divZeros_created = true;
+                // }
+            }
+
+            hextets2 = double2(hextets0.slice());
+            console.log("double colon");
+            console.log(hextets2);
+
+            const div2colon = document.getElementById("div2colon");
+            div2colon.innerHTML = "";
+            let colonHextet_id, divColon_id = div2colon.getAttribute("id");
+
+            for (let i = 0; i < hextets2.length; i++) {
+                colonHextet_id = `${divColon_id}-hextet${i + 1}`;
+
+                const label = document.createElement("label");
+                const input = document.createElement("input");
+
+                label.setAttribute("for", colonHextet_id);
+                label.textContent = i > 0 ? ":" : "";
+
+                input.setAttribute("type", "text");
+                input.setAttribute("id", colonHextet_id);
+                input.setAttribute("maxlength", "4");
+                input.setAttribute("readonly", true);
+                input.value = hextets2[i];
+
+                div2colon.appendChild(label);
+                if (hextets2[i] !== "x") div2colon.appendChild(input);
+                div2colon_created = true;
+            }
+
+        };
+
+        function withoutLeadingZeros(hextets) {
+            const fullIp = document.getElementById("longIp");
+            if(fullIp.value === "") {
+                for (let i = 1; i <= 8; i++) {
+                    const element = document.getElementById(`${divInput_id}-hextet${i}`);
+                    if (element) {
+                        hextets[i-1] = element.value;
+                    } else {
+                        console.error(`Element with ID ${divInput_id}-hextet${i} not found.`);
+                    }
+                }
+            } else {
+                hextets = fullIp.value.split(":");
+            }
+            alert(hextets);
+            return hextets.map(hextet => {
+                let new_hextet = "";
+                let f = false;
+                for (let i = 0; i < 4; i++){
+                    if (i < 3){
+                        if (hextet[i] !== '0' || f){
+                            new_hextet += hextet[i];
+                            f = true;
+                        }
+                    } else {
+                        new_hextet += hextet[i];
+                    }
+                }
+                return new_hextet;
+            });
+        }
+        // 1230 0 0 3244 23 0 3219 0 1293
+        // 2345:425:2CA1:0:0:567:5673:23b5
+        function doubleColon(arr){
+            let adjacents = 0;
+            let max_adj = 0, pos = null;
+            for (let i = 0; i < arr.length; i++) {
+                if(arr[i] === '0'){
+                    adjacents++;
+                    if (adjacents > max_adj){
+                        max_adj = adjacents;
+                        pos = i;
+                    }
+                } else adjacents = 0;
+            }
+            arr3 = arr.slice();
+            if (pos){
+                arr3[pos] = "x";
+                if (max_adj === 1){
+                    return arr3;
+                } else {
+                    // return hextets.slice().splice(pos + 1 - max_adj, pos);
+                    return arr3.splice(3, 4);
+                }
+            } else {
+                return arr3;
+            }
+        }
+        function double2(hextets) {
+        let maxZerosCount = 0;
+        let currentZerosCount = 0;
+        let indexOfStart = -1;
+
+        for (let i = 0; i < hextets.length; i++) {
+            if (hextets[i] === "0") {
+                currentZerosCount++;
+                if (currentZerosCount > maxZerosCount) {
+                    maxZerosCount = currentZerosCount;
+                    indexOfStart = i - currentZerosCount + 1;
+                }
+            } else {
+                currentZerosCount = 0;
+            }
+        }
+
+        if (maxZerosCount > 0) {
+            hextets.splice(indexOfStart, maxZerosCount);
+            hextets.splice(indexOfStart, 0, "x");
+        }
+        return hextets;
+    }
+
+    </script>
+
+</body>
+
+</html>
