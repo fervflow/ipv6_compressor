@@ -202,11 +202,11 @@
             if (where) {
                 const consecutive0title = document.createElement("h4");
                 consecutive0title.textContent = "Consecutive zeros replaced with <::> if exists:";
-                document.getElementById("consecutive0").appendChild(consecutive0title);
+                document.getElementById("consecutive0").replaceChildren(consecutive0title);
             } else {
                 const leading0title = document.createElement("h4");
-                leading0title.textContent = "Removing trailing zeros, if exists:";
-                document.getElementById("leading0").appendChild(leading0title);
+                leading0title.textContent = "Removing leading zeros, if exists:";
+                document.getElementById("leading0").replaceChildren(leading0title);
             }
         }
 
