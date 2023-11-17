@@ -57,127 +57,106 @@
 <body>
 
     <div id="divInput">
-        <h4>Enter the full IPv6 Addres:</h4>
+        <h3>Enter the full IPv6 Addres:</h3>
         <div id="divfullip">
             <label for="fullip"></label>
             <input id="fullip" type="text" maxlength="39">
         </div>
-        <h4>Or by hextets:</h4>
+        <h5>Or by hextets:</h5>
         <div id="divHextets"></div>
         <button onclick="compress()">Compress IPv6 Address</button>
     </div>
+    <div id="leading0"></div>
     <div id="divZeros"></div>
+    <div id="consecutive0"></div>
     <div id="div2colon"></div>
 
     <script>
-        const divHextets = document.getElementById("divHextets");
-        let divZeros_created = false;
-        let div2colon_created = false;
-
-        let inputHextet_id, divHextets_id = divHextets.getAttribute("id");
-
-        for (let i = 1; i <= 8; i++) {
-            inputHextet_id = `${divHextets_id}-hextet${i}`;
-            const label = document.createElement("label");
-            const input = document.createElement("input");
-            label.setAttribute("for", inputHextet_id);
-            label.textContent = i > 1 ? ":" : "";
-            input.setAttribute("type", "text");
-            input.setAttribute("id", inputHextet_id);
-            input.setAttribute("maxlength", "4");
-            divHextets.appendChild(label);
-            divHextets.appendChild(input);
-        }
-        
         let hextets = new Array(8);
-
+        const divHextets = document.getElementById("divHextets");
+        createInputs(divHextets, hextets, false, false); //(div, hextets, readOnly, zero2Last)
+        
         function compress(){
+            hextets = getHextets(divHextets.getAttribute("id"));
+            
+            addStepsTitle(0);
             const divZeros = document.getElementById("divZeros");
-            let zerosHextet_id, divZeros_id = divZeros.getAttribute("id");
-
-            hextets0 = withoutLeadingZeros(hextets);
             divZeros.innerHTML = "";
+            hextets0 = withoutLeadingZeros(hextets);
             console.log(hextets0);
-
-            for (let i = 0; i < hextets0.length; i++) {
-                zerosHextet_id = `${divZeros_id}-hextet${i + 1}`;
-
-                const label = document.createElement("label");
-                const input = document.createElement("input");
-
-                label.setAttribute("for", zerosHextet_id);
-                label.textContent = i > 0 ? ":" : "";
-
-                input.setAttribute("type", "text");
-                input.setAttribute("id", zerosHextet_id);
-                input.setAttribute("maxlength", "4");
-                input.setAttribute("readonly", true);
-                input.value = hextets0[i];
-
-                divZeros.appendChild(label);
-                divZeros.appendChild(input);
-                divZeros_created = true;
-            }
-
-            hextets2 = doubleColon(hextets0.slice());
-            console.log("double colon");
-            console.log(hextets2);
-
+            createInputs(divZeros, hextets0, true, false);
+            
+            addStepsTitle(1);
             const div2colon = document.getElementById("div2colon");
             div2colon.innerHTML = "";
-            let colonHextet_id, divColon_id = div2colon.getAttribute("id");
+            hextets2 = doubleColon(hextets0.slice()); // .slice() to not modify the original array
+            console.log(hextets2);
+            createInputs(div2colon, hextets2, true, true);
+        };
 
-            for (let i = 0; i < hextets2.length; i++) {
-                colonHextet_id = `${divColon_id}-hextet${i + 1}`;
+        function createInputs(div, hextets, readOnly, zero2Last){
+            let input_id, div_id = div.getAttribute("id");
+
+            for (let i = 0; i < hextets.length; i++) {
+                input_id = `${div_id}-hextet${i}`;
 
                 const label = document.createElement("label");
                 const input = document.createElement("input");
 
-                label.setAttribute("for", colonHextet_id);
+                label.setAttribute("for", input_id);
                 label.textContent = i > 0 ? ":" : "";
+                div.appendChild(label);
 
                 input.setAttribute("type", "text");
-                input.setAttribute("id", colonHextet_id);
+                input.setAttribute("id", input_id);
                 input.setAttribute("maxlength", "4");
-                input.setAttribute("readonly", true);
-                input.value = hextets2[i];
 
-                div2colon.appendChild(label);
-                if (hextets2[i] !== "x"){
-                    div2colon.appendChild(input);
+                if (readOnly) {
+                    input.setAttribute("readonly", true);
+                    input.value = hextets[i];
+                }
+                
+                if (zero2Last) {
+                    if (hextets[i] !== "x") {
+                        div.appendChild(input);
+                    } else {
+                        if (i === hextets.length - 1 || i === 0) {
+                            const xlabel = document.createElement("label");
+                            xlabel.textContent = ":";
+                            div.appendChild(xlabel);
+                        }
+                    }
                 } else {
-                    console.log(`x on last index: ${i} of ${hextets2.length - 1}`);
-                    if (i === hextets2.length - 1) {
-                        const lastColon = label.cloneNode(true);
-                        lastColon.removeAttribute("for");
-                        div2colon.appendChild(lastColon);
+                    div.appendChild(input);
+                }
+            }
+        }
+
+        function getHextets(div_id){
+            const fullip = document.getElementById("fullip");
+            let hextets = new Array(8);
+            if(fullip.value !== "") {
+                hextets = fullip.value.split(":");
+            } else {
+                for (let i = 0; i < 8; i++) {
+                    const element = document.getElementById(`${div_id}-hextet${i}`);
+                    if (element) {
+                        hextets[i] = element.value;
+                    } else {
+                        console.error(`Element with ID ${div_id}-hextet${i} not found.`);
                     }
                 }
-                div2colon_created = true;
             }
-
-        };
+            return hextets.map(hextet => hextet.toUpperCase());
+        }
 
         function withoutLeadingZeros(hextets) {
-            const fullip = document.getElementById("fullip");
-            if(fullip.value === "") {
-                for (let i = 1; i <= 8; i++) {
-                    const element = document.getElementById(`${divHextets_id}-hextet${i}`);
-                    if (element) {
-                        hextets[i-1] = element.value;
-                    } else {
-                        console.error(`Element with ID ${divHextets_id}-hextet${i} not found.`);
-                    }
-                }
-            } else {
-                hextets = fullip.value.split(":");
-            }
             return hextets.map(hextet => {
                 let new_hextet = "";
                 let f = false;
                 for (let i = 0; i < 4; i++){
-                    if (i < 3){
-                        if (hextet[i] !== '0' || f){
+                    if (i < 3) {
+                        if (hextet[i] !== '0' || f) {
                             new_hextet += hextet[i];
                             f = true;
                         }
@@ -193,24 +172,36 @@
             let adjacents = 0;
             let max_adj = 0, pos = null;
             for (let i = 0; i < hextets.length; i++) {
-                if(hextets[i] === "0"){
+                if(hextets[i] === "0") {
                     adjacents++;
-                    if (adjacents > max_adj){
+                    if (adjacents > max_adj) {
                         max_adj = adjacents;
                         pos = i;
                     }
                 } else adjacents = 0;
             }
-            if (pos) {
+            if (pos !== null) {
                 hextets[pos] = "x";
-                if (max_adj === 1){
+                if (max_adj === 1) {
                     return hextets;
                 } else {
-                    hextets.splice(pos + 1 - max_adj, pos - 1);
+                    hextets.splice(pos + 1 - max_adj, max_adj - 1);
                     return hextets;
                 }
             } else {
                 return hextets;
+            }
+        }
+        
+        function addStepsTitle(where){
+            if (where) {
+                const consecutive0title = document.createElement("h4");
+                consecutive0title.textContent = "Consecutive zeros replaced with <::> if exists:";
+                document.getElementById("consecutive0").appendChild(consecutive0title);
+            } else {
+                const leading0title = document.createElement("h4");
+                leading0title.textContent = "Removing trailing zeros, if exists:";
+                document.getElementById("leading0").appendChild(leading0title);
             }
         }
 
